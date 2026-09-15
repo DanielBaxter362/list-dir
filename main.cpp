@@ -1,34 +1,25 @@
-#define _XOPEN_SOURCE 500
-#include <ftw.h>
-#include <sys/stat.h>
-#include <unistd.h>
-
 #include <iostream>
-#include <cstdlib>
+#include <filesystem>
+#include <string>
+#include <vector>
+#include <algorithm>
 
-extern "C" int nftw_callback(const char* fpath, const struct stat* sb, int typeflag, struct FTW *ftwbuf)
+namespace fsys = std::filesystem;
+
+struct file_data {
+    std::string name;
+};
+
+std::string trim_path(const std::string& path)
 {
-    const char* filename = fpath + ftwbuf->base;
-    
-    switch (typeflag) {
-        case FTW_D:
-            if (ftwbuf->level == 0) {
-                return FTW_CONTINUE;
-            } else {
-                std::cout << filename << std::endl;
-                return FTW_SKIP_SUBTREE; // Don't traverse subdirectories
-            }
-        case FTW_F:
-            std::cout << filename << std::endl;
-            return FTW_CONTINUE;
-        case FTW_SL:
-            std::cout << filename << std::endl;
-            return FTW_CONTINUE;
-    }
-    
-    std::cout << "Error when listing directory!" << std::endl;
-    return FTW_STOP;
-}   
+    std::size_t last = path.find_last_of("/\\");
+    return path.substr(last+1);
+}
+
+void print_file_data(const file_data& data)
+{
+    std::cout << data.name << std::endl;
+}
 
 int main(int argc, char* argv[]) 
 {
@@ -37,19 +28,23 @@ int main(int argc, char* argv[])
         return 1;    
     }
     
-    char* dir;
-    bool should_free = false;
+    std::string dir;
     if (argc == 1) {
-        dir = get_current_dir_name();
-        should_free = true;
+        dir = fsys::current_path();
     }
     else {
         dir = argv[1];
     }
 
+    std::vector<file_data> files;
+    for (const fsys::directory_entry& entry : fsys::directory_iterator(dir)) {
+        file_data file;
+        file.name = trim_path(entry.path().string());
+
+        files.push_back(file);
+    } 
+
+    std::for_each(files.begin(), files.end(), print_file_data);
     
-    nftw(dir, nftw_callback, 1, FTW_PHYS | FTW_ACTIONRETVAL);
-    
-    if (should_free) { free(dir); }
     return 0;
 }
