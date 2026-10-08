@@ -40,8 +40,19 @@ std::string trim_path(const std::string& path)
 void print_file_data(const FileData& data, const Flags& optn)
 {
     if (data.name[0] == '.' && !optn.show_hidden) { return; }
-    if (optn.show_size) { std::cout << data.size << " "; }
+    if (optn.show_size) { std::cout << data.size / 1000.0f << " "; }
     std::cout << data.name << std::endl;
+}
+
+std::uintmax_t directory_size(const fsys::directory_entry& dir)
+{
+    std::uintmax_t size = 0;
+    
+    for (const fsys::directory_entry& entry : fsys::recursive_directory_iterator(dir.path())) {
+        if (fsys::is_regular_file(entry.path())) { size += entry.file_size(); }
+    }
+
+    return size;
 }
 
 int main(int argc, char* argv[]) 
@@ -95,7 +106,11 @@ int main(int argc, char* argv[])
     for (const fsys::directory_entry& entry : fsys::directory_iterator(dir)) {
         FileData file;
         file.name = trim_path(entry.path().string());
-        if (!entry.is_directory()) { file.size = entry.file_size(); }
+        if (entry.is_directory()) {
+            file.size = directory_size(entry);
+        } else { 
+            file.size = entry.file_size(); 
+        }
 
         files.push_back(file);
     } 
