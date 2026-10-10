@@ -37,7 +37,6 @@ namespace fsys = std::filesystem;
 
 constexpr std::string_view print_size_padding = " ";
 constexpr std::string_view print_name_padding = " | ";
-constexpr int min_file_count_to_split = 5;
 constexpr int max_name_length = 30;
 constexpr int max_column_count = 5;
 

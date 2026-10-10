@@ -1,8 +1,8 @@
 This is a project in progress recreating several common unix command line programs, like:
 
 - ls
-- cd
 - grep
+- sed
 
 ## ls
 As of right now the ls copy lists the contents of any given directory, or the current directory
